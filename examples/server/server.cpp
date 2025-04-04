@@ -93,6 +93,8 @@ struct whisper_params {
     std::string openvino_encode_device = "CPU";
 
     std::string dtw = "";
+
+    int gpu_device = 0;
 };
 
 void whisper_print_usage(int /*argc*/, char ** argv, const whisper_params & params, const server_params& sparams) {
@@ -129,7 +131,8 @@ void whisper_print_usage(int /*argc*/, char ** argv, const whisper_params & para
     fprintf(stderr, "  -dl,       --detect-language   [%-7s] exit after automatically detecting language\n",    params.detect_language ? "true" : "false");
     fprintf(stderr, "             --prompt PROMPT     [%-7s] initial prompt\n",                                 params.prompt.c_str());
     fprintf(stderr, "  -m FNAME,  --model FNAME       [%-7s] model path\n",                                     params.model.c_str());
-    fprintf(stderr, "  -oved D,   --ov-e-device DNAME [%-7s] the OpenVINO device used for encode inference\n",  params.openvino_encode_device.c_str());
+    fprintf(stderr, "  -m FNAME,  --model FNAME       [%-7s] model path\n",                                     params.model.c_str());
+    fprintf(stderr, "  -gd DEV,   --gpu-device DEV    [%-7d] the GPU device used for inference (CUDA, VK)\n",   params.gpu_device);
     // server params
     fprintf(stderr, "  -dtw MODEL --dtw MODEL         [%-7s] compute token-level timestamps\n", params.dtw.c_str());
     fprintf(stderr, "  --host HOST,                   [%-7s] Hostname/ip-adress for the server\n", sparams.hostname.c_str());
@@ -186,6 +189,7 @@ bool whisper_params_parse(int argc, char ** argv, whisper_params & params, serve
         else if (arg == "-fa"   || arg == "--flash-attn")      { params.flash_attn      = true; }
         else if (arg == "-sns"  || arg == "--suppress-nst")    { params.suppress_nst    = true; }
         else if (arg == "-nth"  || arg == "--no-speech-thold") { params.no_speech_thold = std::stof(argv[++i]); }
+        else if (arg == "-gd"   || arg == "--gpu-device")      { params.gpu_device      = std::stoi(argv[++i]); }
 
         // server params
         else if (                  arg == "--port")            { sparams.port        = std::stoi(argv[++i]); }
@@ -540,6 +544,7 @@ int main(int argc, char ** argv) {
     struct whisper_context_params cparams = whisper_context_default_params();
 
     cparams.use_gpu    = params.use_gpu;
+    cparams.gpu_device = params.gpu_device;
     cparams.flash_attn = params.flash_attn;
 
     if (!params.dtw.empty()) {

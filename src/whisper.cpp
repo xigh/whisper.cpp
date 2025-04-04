@@ -1319,8 +1319,22 @@ static ggml_backend_t whisper_backend_init_gpu(const whisper_context_params & pa
 
     int cnt = 0;
     if (params.use_gpu) {
+        WHISPER_LOG_INFO("%s: using GPU device %d [%d]\n", __func__, params.gpu_device, ggml_backend_dev_count());
         for (size_t i = 0; i < ggml_backend_dev_count(); ++i) {
             ggml_backend_dev_t dev_cur = ggml_backend_dev_get(i);
+            switch (ggml_backend_dev_type(dev_cur)) {
+                case GGML_BACKEND_DEVICE_TYPE_GPU:
+                    WHISPER_LOG_INFO("%s: GPU device %d\n", __func__, i);
+                    break;
+                case GGML_BACKEND_DEVICE_TYPE_ACCEL:
+                    WHISPER_LOG_INFO("%s: ACCEL device %d\n", __func__, i);
+                    break;
+                case GGML_BACKEND_DEVICE_TYPE_CPU:
+                    WHISPER_LOG_INFO("%s: CPU device %d\n", __func__, i);
+                    break;
+                default:
+                    break;
+            }
             if (ggml_backend_dev_type(dev_cur) == GGML_BACKEND_DEVICE_TYPE_GPU) {
                 if (cnt == 0 || cnt == params.gpu_device) {
                     dev = dev_cur;
